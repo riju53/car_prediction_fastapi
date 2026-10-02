@@ -63,7 +63,7 @@ class UserInput(BaseModel):
         Field(
             description="Enter your car age",
             gt=0,
-            lt=12
+            lt=15
         )
     ]
 
