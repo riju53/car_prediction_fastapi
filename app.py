@@ -12,6 +12,12 @@ with open('car_predictor.pkl','rb') as f:
 
 app = FastAPI()
 
+@app.get("/")
+def home():
+    return {
+        "message": "Car Price Prediction API is running",
+        "status": "success"
+    }
 # create pydantic model to validate.
 
 class UserInput(BaseModel):
