@@ -1,16 +1,36 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, computed_field
+from pydantic import BaseModel, Field
 from typing import Literal, Annotated
-#import pickle
 import joblib
-import pandas as pd 
+import pandas as pd
+from pathlib import Path
 
-# Import the ml_model
-with open('car_predictor.pkl','rb') as f:
-    ml_model = joblib.load(f)
 
-app = FastAPI()
+# ============================================================
+# Load ML Model
+# ============================================================
+
+BASE_DIR = Path(__file__).resolve().parent
+MODEL_PATH = BASE_DIR / "car_predictor.pkl"
+
+ml_model = joblib.load(MODEL_PATH)
+
+
+# ============================================================
+# FastAPI App
+# ============================================================
+
+app = FastAPI(
+    title="Car Price Prediction API",
+    description="Machine Learning API for Car Price Category Prediction",
+    version="1.0.0"
+)
+
+
+# ============================================================
+# Home
+# ============================================================
 
 @app.get("/")
 def home():
@@ -18,41 +38,119 @@ def home():
         "message": "Car Price Prediction API is running",
         "status": "success"
     }
-# create pydantic model to validate.
+
+
+# ============================================================
+# Pydantic Model
+# ============================================================
 
 class UserInput(BaseModel):
-    Brand:Annotated[Literal['Hyundai', 'Volkswagen', 'Toyota', 'Honda', 'Maruti', 'Mahindra',
-       'Tata', 'Kia'],Field(...,description=("Car Brand name"))]
-    Car_Age: Annotated[int,Field(...,description=("Enter your car age"),gt=0,lt=12)]
-    Kilometers_Driven:Annotated[int,Field(...,description=("How much car drove"))]
-    Engine_CC:Annotated[int,Field(...,description=("How much is Engine power."))]
-    Mileage_KMPL:Annotated[float,Field(...,description=("Enter car milage in KMPL"))]
-    Fuel_Type:Annotated[Literal['Petrol', 'Diesel', 'CNG', 'Electric'],Field(...,description=("Enter fuel type."))]
-    Transmission:Annotated[Literal['Manual', 'Automatic'],Field(...,description="Enter Transmission type.")]
-    Previous_Owners:Annotated[int,Field(...,description=("Number of previous owner."))]
-    Seats:Annotated[Literal[5,7],Field(...,description="Enter number of seats.")]
-    Location:Annotated[Literal['Delhi', 'Pune', 'Kolkata', 'Hyderabad', 'Chennai', 'Durgapur',
-       'Bengaluru', 'Mumbai'],Field(...,description=("Enter the city name from where the car from."))]
-    
+
+    Brand: Annotated[
+        Literal[
+            "Hyundai",
+            "Volkswagen",
+            "Toyota",
+            "Honda",
+            "Maruti",
+            "Mahindra",
+            "Tata",
+            "Kia"
+        ],
+        Field(description="Car Brand name")
+    ]
+
+    Car_Age: Annotated[
+        int,
+        Field(
+            description="Enter your car age",
+            gt=0,
+            lt=12
+        )
+    ]
+
+    Kilometers_Driven: Annotated[
+        int,
+        Field(description="How much car drove")
+    ]
+
+    Engine_CC: Annotated[
+        int,
+        Field(description="How much is Engine power")
+    ]
+
+    Mileage_KMPL: Annotated[
+        float,
+        Field(description="Enter car mileage in KMPL")
+    ]
+
+    Fuel_Type: Annotated[
+        Literal[
+            "Petrol",
+            "Diesel",
+            "CNG",
+            "Electric"
+        ],
+        Field(description="Enter fuel type")
+    ]
+
+    Transmission: Annotated[
+        Literal[
+            "Manual",
+            "Automatic"
+        ],
+        Field(description="Enter transmission type")
+    ]
+
+    Previous_Owners: Annotated[
+        int,
+        Field(description="Number of previous owners")
+    ]
+
+    Seats: Annotated[
+        Literal[5, 7],
+        Field(description="Enter number of seats")
+    ]
+
+    Location: Annotated[
+        Literal[
+            "Delhi",
+            "Pune",
+            "Kolkata",
+            "Hyderabad",
+            "Chennai",
+            "Durgapur",
+            "Bengaluru",
+            "Mumbai"
+        ],
+        Field(description="Enter city name")
+    ]
+
+
+# ============================================================
+# Prediction
+# ============================================================
 
 @app.post("/predict")
-def predict_car_price(data:UserInput):
+def predict_car_price(data: UserInput):
 
-    input = pd.DataFrame([
+    input_data = pd.DataFrame([
         {
-            "Brand":data.Brand,
-            "Car_Age":data.Car_Age,
-            "Kilometers_Driven":data.Kilometers_Driven,
-            "Engine_CC":data.Engine_CC,
-            "Mileage_KMPL":data.Mileage_KMPL,
-            "Fuel_Type":data.Fuel_Type,
-            "Transmission":data.Transmission,
-            "Previous_Owners":data.Previous_Owners,
-            "Seats":data.Seats,
-            "Location":data.Location
+            "Brand": data.Brand,
+            "Car_Age": data.Car_Age,
+            "Kilometers_Driven": data.Kilometers_Driven,
+            "Engine_CC": data.Engine_CC,
+            "Mileage_KMPL": data.Mileage_KMPL,
+            "Fuel_Type": data.Fuel_Type,
+            "Transmission": data.Transmission,
+            "Previous_Owners": data.Previous_Owners,
+            "Seats": data.Seats,
+            "Location": data.Location
         }
     ])
 
-    prediction =  ml_model.predict(input)[0]
+    prediction = ml_model.predict(input_data)[0]
 
-    return JSONResponse(status_code=200,content={'predicted_category':prediction})
+    return {
+        "predicted_category": str(prediction)
+    }
