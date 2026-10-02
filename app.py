@@ -11,10 +11,8 @@ from pathlib import Path
 # Load ML Model
 # ============================================================
 
-BASE_DIR = Path(__file__).resolve().parent
-MODEL_PATH = BASE_DIR / "car_predictor.pkl"
-
-ml_model = joblib.load(MODEL_PATH)
+with open('car_predictor.pkl','rb') as f:
+    ml_model = joblib.load(f)
 
 
 # ============================================================
