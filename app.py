@@ -32,12 +32,12 @@ app = FastAPI(
 # Home
 # ============================================================
 
-@app.get("/")
-def home():
-    return {
-        "message": "Car Price Prediction API is running",
-        "status": "success"
-    }
+# @app.get("/")
+# def home():
+#     return {
+#         "message": "Car Price Prediction API is running",
+#         "status": "success"
+#     }
 
 
 # ============================================================
